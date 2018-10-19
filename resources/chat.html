@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+  <body>
+    <div id="app">
+      <ul>
+        <li v-for="message in messages">
+          <span :style="{ 'color': stringToColour(message.user) }">{{ message.user }}</span>({{ message.service }}) {{ message.content }}
+        </li>
+      </ul>
+    </div>
+
+   
+    <script src="https://unpkg.com/vue"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var app = new Vue({
+        el: '#app',
+        data: {
+          messages: [],
+          socket: io()
+        },
+        methods: {
+          stringToColour (str) {
+            var hash = 0;
+            for (var i = 0; i < str.length; i++) {
+              hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            var colour = '#';
+            for (var i = 0; i < 3; i++) {
+              var value = (hash >> (i * 8)) & 0xFF;
+              colour += ('00' + value.toString(16)).substr(-2);
+            }
+            return colour;
+          }
+        },
+        mounted() {
+          this.socket.on('message', (data) => {
+            this.messages.push(data)
+          });
+        }
+      })
+
+    </script>
+  </body>
+</html>
