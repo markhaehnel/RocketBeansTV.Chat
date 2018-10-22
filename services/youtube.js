@@ -62,7 +62,7 @@ async function requestYoutubeMessages (messageReceivedCallback, liveChatID, next
   }
 
   // Wait until we are allowed to request again
-  setTimeout(() => requestYoutubeMessages(liveChatID, nextPageToken), timeout)
+  setTimeout(() => requestYoutubeMessages(messageReceivedCallback, liveChatID, nextPageToken), timeout)
 }
 
 module.exports.listen = (messageReceivedCallback) => {

@@ -1,14 +1,75 @@
 <!doctype html>
 <html>
+  <head>
+    <link href="https://fonts.googleapis.com/css?family=Rubik:400,600" rel="stylesheet">
+    <style>
+      body {
+        margin: 0;
+        font-family: 'Rubik', sans-serif;
+        background-color: #222;
+        font-size: 1rem;
+      }
+
+      .chat-container {
+        margin: 0;
+        padding: 0;
+        color: #fff;
+      }
+
+      .chat-message {
+        background-color: #292929;
+        padding: 0.5rem;
+      }
+
+      .chat-message:nth-child(2n) {
+        background-color: #222;
+      }
+
+      .chat-message-user {
+        display: inline-block;
+        font-weight: 600;
+        margin-left: auto;
+        margin-right: auto;
+        position: relative;
+        transform: translateY(-15%);
+      }
+      
+      .chat-message-service {
+        height: 1rem;
+        width: 1rem;
+        display: inline-block;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        margin-right: 4px;
+      }
+      
+      .chat-message-service.twitch {
+        background-image: url(data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTk2IDIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMzIgMTQwaDQ0djI0bDI0LTI0aDQ2bDI2LTI2VjIwSDMydjEyMHptODQtODhhNCA0IDAgMCAxIDQtNGgxNmE0IDQgMCAwIDEgNCA0djUyYTQgNCAwIDAgMS00IDRoLTE2YTQgNCAwIDAgMS00LTRWNTJ6bS00MCAwYTQgNCAwIDAgMSA0LTRoMTZhNCA0IDAgMCAxIDQgNHY1MmE0IDQgMCAwIDEtNCA0SDgwYTQgNCAwIDAgMS00LTRWNTJ6IiBmaWxsPSJub25lIi8+PHBhdGggZD0iTTE0IDBMMCAyNHYxNDhoNDh2MjhoMjhsMzEuMTExLTI4SDE0Nmw1MC00NlYwSDE0em0xNTggMTE0bC0yNiAyNmgtNDZsLTI0IDI0di0yNEgzMlYyMGgxNDB2OTR6IiBmaWxsPSIjOUQ1N0M0Ii8+PHBhdGggZD0iTTgwIDEwOGgxNmE0IDQgMCAwIDAgNC00VjUyYTQgNCAwIDAgMC00LTRIODBhNCA0IDAgMCAwLTQgNHY1MmE0IDQgMCAwIDAgNCA0ek0xMjAgMTA4aDE2YTQgNCAwIDAgMCA0LTRWNTJhNCA0IDAgMCAwLTQtNGgtMTZhNCA0IDAgMCAwLTQgNHY1MmE0IDQgMCAwIDAgNCA0eiIgZmlsbD0iIzlENTdDNCIvPjwvc3ZnPg==);
+      }
+
+      .chat-message-service.youtube {
+        background-image: url(data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjMyIiB2ZXJzaW9uPSIxIiB3aWR0aD0iMzIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTMxLjY3IDkuMTc5cy0uMzEyLTIuMzUzLTEuMjcxLTMuMzg5Yy0xLjIxNy0xLjM1OC0yLjU4LTEuMzY2LTMuMjA1LTEuNDQzQzIyLjcxNyA0IDE2LjAwMiA0IDE2LjAwMiA0aC0uMDE1cy02LjcxNSAwLTExLjE5MS4zNDdjLS42MjUuMDc3LTEuOTg3LjA4NS0zLjIwNSAxLjQ0M0MuNjMzIDYuODI2LjMyIDkuMTc5LjMyIDkuMTc5UzAgMTEuOTQgMCAxNC43MDF2Mi41ODhjMCAyLjc2My4zMiA1LjUyMy4zMiA1LjUyM3MuMzEyIDIuMzUyIDEuMjcxIDMuMzg2YzEuMjE4IDEuMzU4IDIuODE1IDEuMzE3IDMuNTI3IDEuNDU5IDIuNTU5LjI2MiAxMC44NzcuMzQzIDEwLjg3Ny4zNDNzNi43MjItLjAxMiAxMS4xOTktLjM1NWMuNjI1LS4wOCAxLjk4OC0uMDg4IDMuMjA1LTEuNDQ2Ljk1OC0xLjAzNCAxLjI3MS0zLjM4NiAxLjI3MS0zLjM4NnMuMzItMi43NjEuMzItNS41MjN2LTIuNTg4YzAtMi43NjItLjMyLTUuNTIzLS4zMi01LjUyM3oiIGZpbGw9IiNFMDJGMkYiLz48cGF0aCBmaWxsPSIjRkZGIiBkPSJNMTIgMTB2MTJsMTAtNnoiLz48L3N2Zz4=);
+      }
+
+      .chat-message-content {
+        display: inline-block;
+        font-weight: 400;
+      }
+    </style>
+  </head>
   <body>
     <div id="app">
-      <ul>
-        <li v-for="message in messages">
-          <span :style="{ 'color': stringToColour(message.user) }">{{ message.user }}</span>({{ message.service }}) {{ message.content }}
-        </li>
-      </ul>
+      <div class="chat-container">
+        <div class="chat-message" v-for="message in messages">
+          <div class="chat-message-container">
+            <div class="chat-message-service" :class="message.service"></div>
+            <div class="chat-message-user" :style="{ 'color': getUserColor(message.user) }" v-text="message.user"></div>
+          </div>
+          <div class="chat-message-content" v-text="message.content"></div>
+        </div>
+      </div>
     </div>
-
    
     <script src="https://unpkg.com/vue"></script>
     <script src="/socket.io/socket.io.js"></script>
@@ -17,20 +78,17 @@
         el: '#app',
         data: {
           messages: [],
-          socket: io()
+          userColors: {},
+          socket: io(),
+          colors: ['rgb(255, 0, 0)','rgb(0, 0, 255)','rgb(0, 128, 0)','rgb(178, 34, 34)','rgb(255, 127, 80)','rgb(154, 205, 50)','rgb(255, 69, 0)','rgb(46, 139, 87)','rgb(218, 165, 32)','rgb(210, 105, 30)','rgb(95, 158, 160)','rgb(30, 144, 255)','rgb(255, 105, 180)','rgb(138, 43, 226)','rgb(0, 255, 127)']
         },
         methods: {
-          stringToColour (str) {
-            var hash = 0;
-            for (var i = 0; i < str.length; i++) {
-              hash = str.charCodeAt(i) + ((hash << 5) - hash);
+          getUserColor (username) {
+            if (!this.userColors.hasOwnProperty(username)) {
+              this.userColors[username] = this.colors[Math.floor(Math.random() * this.colors.length)]
             }
-            var colour = '#';
-            for (var i = 0; i < 3; i++) {
-              var value = (hash >> (i * 8)) & 0xFF;
-              colour += ('00' + value.toString(16)).substr(-2);
-            }
-            return colour;
+
+            return this.userColors[username]
           }
         },
         mounted() {
