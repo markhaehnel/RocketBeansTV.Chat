@@ -97,8 +97,10 @@
             if (this.messages.length > 30) {
               this.messages.shift()
             }
-            document.querySelector('html').scrollTop = 1000000;
           });
+        },
+        updated() {
+          document.querySelector('html').scrollTop = 1000000;
         }
       })
 
