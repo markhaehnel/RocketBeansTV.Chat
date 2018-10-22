@@ -1,7 +1,7 @@
 const { google } = require('googleapis')
 
 const youtubeClient = google.youtube('v3')
-const authKey = 'AIzaSyAeQJkSwi4Ru3Hy4IVvnpLKn7yWL0LokIY'
+const authKey = process.env.YOUTUBEKEY
 
 async function listenYoutubeChat (messageReceivedCallback) {
   const { data } = await youtubeClient.search.list({
