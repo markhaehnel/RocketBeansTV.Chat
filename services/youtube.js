@@ -1,70 +1,77 @@
 const { google } = require('googleapis')
 
 const youtubeClient = google.youtube('v3')
+
 const authKey = process.env.YOUTUBEKEY
 
-async function listenYoutubeChat (messageReceivedCallback) {
-  const { data } = await youtubeClient.search.list({
+function sleep (ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+async function getChannelLiveStreams () {
+  return youtubeClient.search.list({
     key: authKey,
     part: 'snippet',
     channelId: 'UCQvTDmHza8erxZqDkjQ4bQQ',
     eventType: 'live',
     type: 'video'
   })
-
-  // get live chat id
-  let response = await youtubeClient.videos.list({
-    key: authKey,
-    part: 'liveStreamingDetails',
-    id: data.items[0].id.videoId
-  })
-
-  requestYoutubeMessages(messageReceivedCallback, response.data.items[0].liveStreamingDetails.activeLiveChatId)
 }
 
-async function requestYoutubeMessages (messageReceivedCallback, liveChatID, nextPageToken) {
-  let requestObject = {}
+async function getVideoData (id) {
+  return youtubeClient.videos.list({
+    key: authKey,
+    part: 'liveStreamingDetails',
+    id: id
+  })
+}
 
-  if (nextPageToken) {
-    // nextPageToken defines from where to look for new messages.
-    requestObject = {
+async function listen (messageReceivedCallback) {
+  try {
+    let data = {}
+
+    let liveStreamData = (await getChannelLiveStreams()).data
+    data['videoID'] = liveStreamData.items[0].id.videoId
+
+    let videoData = (await getVideoData(data.videoID)).data
+    data['liveChatID'] = videoData.items[0].liveStreamingDetails.activeLiveChatId
+
+    let requestObject = {
       key: authKey,
       part: 'snippet,authorDetails',
       maxResults: '200',
-      pageToken: nextPageToken,
-      liveChatId: liveChatID
+      liveChatId: data['liveChatID']
     }
-  } else {
-    // Withouth nextPageToken, get the last 200 results.
-    requestObject = {
-      key: authKey,
-      part: 'snippet,authorDetails',
-      maxResults: '200',
-      liveChatId: liveChatID
+
+    let nextPageToken = null
+
+    while (true) {
+      let reqObj = Object.assign({}, requestObject)
+
+      if (nextPageToken) reqObj['pageToken'] = nextPageToken
+
+      let chatData = (await youtubeClient.liveChatMessages.list(reqObj)).data
+      nextPageToken = chatData.nextPageToken
+
+      if (chatData.items.length > 0) {
+        chatData.items.forEach(item => {
+          messageReceivedCallback({
+            user: item.authorDetails.displayName,
+            content: item.snippet.displayMessage,
+            service: 'youtube'
+          })
+        })
+      }
+
+      await sleep(chatData.pollingIntervalMillis)
     }
+  } catch (error) {
+    console.log('[YouTube] Error in chat listener. Restarting in 30 seconds.', error)
+    await sleep(30000)
+    listen(messageReceivedCallback)
   }
-  // Use the defined array for the request
-  let { data } = await youtubeClient.liveChatMessages.list(requestObject)
-
-  // Capture current time for a cooldown required later
-  nextPageToken = data.nextPageToken
-
-  // YouTube API gives us a certain time we have to wait before requesting again
-  let timeout = data.pollingIntervalMillis
-  if (data.items.length > 0) {
-    data.items.forEach(item => {
-      messageReceivedCallback({
-        user: item.authorDetails.displayName,
-        content: item.snippet.displayMessage,
-        service: 'youtube'
-      })
-    })
-  }
-
-  // Wait until we are allowed to request again
-  setTimeout(() => requestYoutubeMessages(messageReceivedCallback, liveChatID, nextPageToken), timeout)
 }
 
 module.exports.listen = (messageReceivedCallback) => {
-  listenYoutubeChat(messageReceivedCallback)
+  listen(messageReceivedCallback)
 }
